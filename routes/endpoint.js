@@ -6,7 +6,7 @@ const connection = mysql.createConnection({
   host: "localhost",
   user: "root",
   password: "qwertyuiop123!@#",
-  database: "TrafficMon"
+  database: "TrafficMon_import"
 });
 connection.connect(function(err) {
   err
@@ -14,10 +14,20 @@ connection.connect(function(err) {
     : console.log("connection******** successful");
 });
 
-router.get("/", function(req, res, next) {
+router.get("/users", function(req, res, next) {
   //   res.send("respond with a the users");
 
-  connection.query("Select * from UserLogin", function(error, results, fields) {
+  connection.query("select * from usert", function(error, results, fields) {
+    if (error) res.send("query is received but no db connection");
+    //console.log('results',results);
+    res.send(JSON.stringify(results));
+  });
+});
+
+router.get("/login", function(req, res, next) {
+  //   res.send("respond with a the users");
+
+  connection.query("select * from logint", function(error, results, fields) {
     if (error) res.send("query is received but no db connection");
     //console.log('results',results);
     res.send(JSON.stringify(results));

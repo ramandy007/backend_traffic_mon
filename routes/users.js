@@ -13,35 +13,58 @@ const Sequelize = require("sequelize");
 process.env.SECRET_KEY = "secret";
 
 const db = {};
-const sequelize = new Sequelize("TrafficMon", "root", "qwertyuiop123!@#", {
-  host: "localhost",
-  dialect: "mysql",
-  operatorAliases: false,
-  freezeTableName: true,
-  pool: {
-    max: 5,
-    min: 0,
-    acquire: 30000,
-    idle: 10000
+const sequelize = new Sequelize(
+  "TrafficMon_import",
+  "root",
+  "qwertyuiop123!@#",
+  {
+    host: "localhost",
+    dialect: "mysql",
+    operatorAliases: false,
+    freezeTableName: true,
+    pool: {
+      max: 5,
+      min: 0,
+      acquire: 30000,
+      idle: 10000
+    }
   }
-});
+);
 
 db.sequelize = sequelize;
 //console.log(db);
 
-const User = db.sequelize.define(
-  "UserLogin",
+const Login_input = db.sequelize.define(
+  "logint",
   {
-    id: {
+    user_id: { type: Sequelize.INTEGER },
+    login_username: { type: Sequelize.STRING },
+    user_password: { type: Sequelize.STRING },
+    pass_hash: { type: Sequelize.STRING }
+  },
+  {
+    timestamps: false,
+    freezeTableName: true
+  }
+);
+
+const User = db.sequelize.define(
+  "usert",
+  {
+    user_id: {
       type: Sequelize.INTEGER,
-      primaryKey: true,
-      autoIncrement: true
+      primaryKey: true
     },
-    // first_name:{type:Sequelize.STRING},
-    // last_name:{type:Sequelize.STRING},
-    email: { type: Sequelize.STRING },
-    password: {
+
+    user_name: { type: Sequelize.STRING },
+    user_address: {
       type: Sequelize.STRING
+    },
+    licence_no: {
+      type: Sequelize.INTEGER
+    },
+    user_permission: {
+      type: Sequelize.SMALLINT
     }
 
     // created: { type: Sequelize.DATE, defaultValue: Sequelize.NOW },
@@ -63,30 +86,41 @@ router.post("/register", (req, res) => {
   // if (!isValid) {
   //   return res.status(400).json(errors);
   // }
-
-  const today = new Date();
+  // res.send(req.body);
   const userData = {
-    // first_name:req.body.first_name,
-    // last_name:req.body.last_name,
-    email: req.body.email,
+    user_name: req.body.name,
     password: req.body.password,
-    created: today,
-    modified: today
+    user_address: req.body.user_address,
+    licence_no: req.body.licence_no,
+    user_permission: req.body.user_permission
+  };
+  const loginData = {
+    login_username: req.body.user_name,
+    user_password: req.body.password,
+    pass_hash: ""
   };
 
-  // res.send(userData);
-  User.findOne({
+  console.log(loginData + "\n" + userData);
+
+  Login_input.findOne({
     where: {
-      email: req.body.email
+      login_username: req.body.user_name
     }
   })
     .then(user => {
       if (!user) {
         bcrypt.hash(req.body.password, 10, (err, hash) => {
-          userData.password = hash;
+          loginData.pass_hash = hash;
           User.create(userData)
             .then(user => {
               res.json({ status: user.email + " registered" });
+            })
+            .catch(err => {
+              res.send("error" + err);
+            });
+          Login_input.create(loginData)
+            .then(user => {
+              res.json({ status: user.login_username + " registered" });
             })
             .catch(err => {
               res.send("error" + err);
@@ -99,6 +133,26 @@ router.post("/register", (req, res) => {
     .catch(err => {
       res.send("error:" + err);
     });
+
+  // res.send(userData);
+
+  User.findOne({
+    where: {
+      user_name: req.body.user_name
+    }
+  });
+  // .then(user => {
+  //   if (!user) {
+  //     bcrypt.hash(req.body.password, 10, (err, hash) => {
+  //       userData.pass_hash = hash;
+  //     });
+  //   } else {
+  //     res.status(400).json({ error: "User already exists" });
+  //   }
+  // })
+  // .catch(err => {
+  //   res.send("error:" + err);
+  // });
 });
 
 router.post("/login", (req, res) => {
