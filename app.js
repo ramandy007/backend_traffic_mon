@@ -3,6 +3,11 @@ var express = require("express");
 var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
+const exjwt = require('express-jwt');
+
+const jwtMW = exjwt({
+  secret: 'you cant guess it guys!!!'
+})
 
 var indexRouter = require("./routes/index");
 var usersRouter = require("./routes/user1.js");
@@ -24,13 +29,17 @@ app.use("/", indexRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/list", apiEndpoint);
 
+app.get('/test', jwtMW /* Using the express jwt MW here */, (req, res) => {
+  res.send('You are authenticated'); //Sending some response when authenticated
+});
+
 // catch 404 and forward to error handler
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
   next(createError(404));
 });
 
 // error handler
-app.use(function(err, req, res, next) {
+app.use(function (err, req, res, next) {
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get("env") === "development" ? err : {};
