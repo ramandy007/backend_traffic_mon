@@ -26,8 +26,18 @@ connection.connect(function (err) {
     ? console.log(err + "+++++++++++++++//////////")
     : console.log("connection2******** successful");
 });
+router.get("/users", (req, res) => {
 
-router.get("/register", (req, res) => {
+  //  get request tolists all entries in logint table of database
+  connection.query("select * from usert;", function (err, rows, fields) {
+    if (err) throw err;
+    res.send(JSON.stringify(rows));
+
+    console.log("The solution is: ", rows[0]);
+  });
+});
+
+router.get("/login", (req, res) => {
 
   //  get request tolists all entries in logint table of database
   connection.query("select * from logint;", function (err, rows, fields) {
@@ -38,6 +48,7 @@ router.get("/register", (req, res) => {
   });
 });
 
+var loginData = {};
 router.post("/register", (req, res) => {
   // if a post request with details in body to this route the query is executed
 
@@ -48,7 +59,7 @@ router.post("/register", (req, res) => {
     licence_no: req.body.licence_no,
     user_permission: req.body.user_permission
   };
-  var loginData = {
+  loginData = {
     login_username: req.body.user_name,
     user_password: req.body.password,
     pass_hash: "",
@@ -61,26 +72,28 @@ router.post("/register", (req, res) => {
     if (err) console.log(err);
     {
       loginData.user_id = await result.insertId;
-
+      console.log("from user insetrion", loginData)
       // console.log(result);
       // console.log("\nInsertion sucess");
+      bcrypt.hash(req.body.password, 10, (err, hash) => {
+        if (err) console.log(err);
+        loginData.pass_hash = hash;
+        var insert_loginquery = "Insert into logint set ?";
+        console.log(loginData);
+
+        connection.query(insert_loginquery, loginData, function (err, result) {
+          if (err) console.log(err);
+          {
+            console.log(result);
+            console.log("\nInsertion sucess");
+            res.send(result);
+          }
+        });
+      });
     }
   });
 
-  bcrypt.hash(req.body.password, 10, (err, hash) => {
-    if (err) console.log(err);
-    // console.log(hash);
-    loginData.pass_hash = hash;
-    var insert_loginquery = "Insert into logint set ?";
-    connection.query(insert_loginquery, loginData, function (err, result) {
-      if (err) console.log(err);
-      {
-        console.log(result);
-        console.log("\nInsertion sucess");
-        res.send(result);
-      }
-    });
-  });
+
 
   // var insert_userquery = `insert into usert (user_name,user_address,licence_no,user_permission) values('${userData.user_name}' ,'${userData.user_address}' , '${userData.licence_no}','${userData.userpermission}');`;
 });
@@ -113,11 +126,12 @@ router.post("/login", (req, res) => {
             "success": "login successful",
             token: token
           });
+          // return Promise.resolve(res);
         }
         else {
           res.send({
             "code": 204,
-            "success": "username amd password doesnt match"
+            "success": "username and password doesnt match"
           });
         }
       } else {
