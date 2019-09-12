@@ -49,6 +49,7 @@ router.get("/login", (req, res) => {
 });
 
 var loginData = {};
+
 router.post("/register", (req, res) => {
   // if a post request with details in body to this route the query is executed
 
@@ -119,21 +120,27 @@ router.post("/login", (req, res) => {
       console.log('the solution is:', results);
 
       if (results.length > 0) {
-        if (bcrypt.compareSync(user_password, results[0].pass_hash)) {
-          let token = jwt.sign({ id: results[0].user_id, username: login_username }, 'you cant guess it guys!!!', { expiresIn: 129600 });
-          res.json({
-            "code": 200,
-            "success": "login successful",
-            token: token
-          });
-          // return Promise.resolve(res);
-        }
-        else {
-          res.send({
-            "code": 204,
-            "success": "username and password doesnt match"
-          });
-        }
+        connection.promise().query("select user_permission from usert where user_id =?", [results[0].user_id]).then(([rows, fields]) => {
+          console.log(rows[0].user_permission);
+          console.log("before token creation");
+          if (bcrypt.compareSync(user_password, results[0].pass_hash)) {
+            let token = jwt.sign({ id: results[0].user_id, username: login_username, user_permission: rows[0].user_permission }, 'you cant guess it guys!!!', { expiresIn: 129600 });
+            console.log("ater token creatioon")
+            res.json({
+              "code": 200,
+              "success": "login successful",
+              token: token
+            });
+            // return Promise.resolve(res);
+          }
+          else {
+            res.send({
+              "code": 204,
+              "success": "username and password doesnt match"
+            });
+          }
+        }).catch(console.log)
+
       } else {
         res.send({
           "code": 204,
@@ -142,6 +149,59 @@ router.post("/login", (req, res) => {
       }
 
 
+    }
+  });
+
+
+
+
+
+
+});
+
+router.post("/editusers", (req, res) => {
+  // if a post request with details in body to this route the query is executed
+
+  var userData = {
+    user_name: req.body.name,
+
+    user_address: req.body.user_address,
+    licence_no: req.body.licence_no,
+    user_permission: req.body.user_permission
+  };
+  var loginData = {
+    login_username: req.body.user_name,
+    user_password: req.body.password,
+    pass_hash: "",
+
+  };
+
+  var update_userquery = 'update usert set   ? where user_id= ? ';
+
+  connection.query(update_userquery, [userData, req.body.user_id], async function (err, result) {
+
+    console.log(update_userquery);
+    if (err) console.log(err);
+    {
+      loginData.user_id = await result.insertId;
+      console.log("from user updation", loginData)
+      // console.log(result);
+      // console.log("\nInsertion sucess");
+      bcrypt.hash(req.body.password, 10, (err, hash) => {
+        if (err) console.log(err);
+        loginData.pass_hash = hash;
+        var update_loginquery = "update  logint set ? where user_id=?";
+        console.log(loginData);
+
+        connection.query(update_loginquery, [loginData, req.body.user_id], function (err, result) {
+          if (err) console.log(err);
+          {
+            console.log(result);
+            console.log("\n updation  sucess");
+            res.send(result);
+          }
+        });
+      });
     }
   });
 
