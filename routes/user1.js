@@ -208,7 +208,69 @@ router.post("/editusers", (req, res) => {
 
 
 
+
 });
+
+
+router.post("/vehicles", (req, res) => {
+
+  var data = {
+    plate_no: req.body.plate_no,
+    vehicle_type: req.body.vehicle_type,
+    manufacture: req.body.manufacture,
+    user_id: req.body.user_id
+  }
+
+  var query = "insert into vehiclet  set ? ";
+
+  connection.query(query, data, (err, results) => {
+    console.log(query);
+
+    if (err) res.send(err);
+
+    else {
+      console.log(results);
+      console.log("vehicle insertion success");
+      res.send(" vehicle insertion success");
+    }
+
+
+  });
+
+});
+
+router.get("/vehicle_info", (req, res) => {
+
+  var plate_no = req.query.plate_no;
+  var query = `select * from vehiclet where plate_no = '${plate_no}'`;
+  console.log(plate_no, query);
+  connection.query(query, (err, result) => {
+    console.log("query processed ");
+    var op = result;
+    if (result.length != 0) {
+      var uid = op[0].user_id;
+      var query = `select * from usert where user_id ='${uid}'`;
+      connection.query(query, async (err, result) => {
+        var userdetails = await result;
+        for (x of userdetails) {
+          console.log(x);
+          op.push(x);
+        }
+        res.send(op);
+      });
+
+      console.log('\n\n', uid);
+    }
+    else (res.send(null))
+
+
+
+  });
+
+
+
+});
+
 
 module.exports = router;
 
