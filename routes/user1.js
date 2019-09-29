@@ -52,7 +52,7 @@ var loginData = {};
 
 router.post("/register", (req, res) => {
   // if a post request with details in body to this route the query is executed
-
+  var phonenumber = req.body.phonenumber
   var userData = {
     user_name: req.body.name,
 
@@ -91,6 +91,14 @@ router.post("/register", (req, res) => {
           }
         });
       });
+
+      var phn_query = `insert into usermobilet values (${phonenumber},${loginData.user_id})`
+      connection.query(phn_query, (err, res) => {
+        if (err) console.log(err)
+        else
+          console.log(`phonenumber insertion success ${phonenumber}`)
+      });
+
     }
   });
 
@@ -270,6 +278,62 @@ router.get("/vehicle_info", (req, res) => {
 
 
 });
+
+
+router.post('/input_fine', (req, res) => {
+
+  var d = new Date();
+
+  var date = d.getDate()
+  var month = d.getMonth()
+  var year = d.getFullYear()
+
+  var datestr = date + '/' + month + '/' + year
+
+
+  var data = {
+    c_time: datestr,
+    licence_no: req.body.licence_no,
+    fine: req.body.fine,
+    tp_id: req.body.tp_id
+
+  }
+
+  var query = 'insert into complaintst set ?'
+
+  connection.query(query, data, (err, results) => {
+    console.log(query);
+
+    if (err) res.send(err);
+
+    else {
+      console.log(results);
+      console.log("fine insertion success");
+      res.send(" fine insertion success");
+    }
+
+
+  });
+
+});
+
+
+router.get('/licence_info', (req, res) => {
+
+  var licence_no = req.query.licence_no;
+  var query = `select * from complaintst where licence_no= '${licence_no}'`
+  connection.query(query, async (err, result) => {
+    console.log('query processed');
+    var op = await result;
+    if (op.length != 0)
+      res.send(op);
+    else
+      res.send()
+  });
+
+});
+
+
 
 
 module.exports = router;
