@@ -309,7 +309,7 @@ router.post('/input_fine', (req, res) => {
     else {
       console.log(results);
       console.log("fine insertion success");
-      res.send(" fine insertion success");
+      res.send("fine insertion success");
     }
 
 
