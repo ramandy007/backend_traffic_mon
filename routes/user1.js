@@ -239,7 +239,7 @@ router.post("/vehicles", (req, res) => {
     else {
       console.log(results);
       console.log("vehicle insertion success");
-      res.send(" vehicle insertion success");
+      res.send("vehicle insertion success");
     }
 
 
@@ -257,7 +257,7 @@ router.get("/vehicle_info", (req, res) => {
     var op = result;
     if (result.length != 0) {
       var uid = op[0].user_id;
-      var query = `select * from usert where user_id ='${uid}'`;
+      var query = `select user_name,user_address,licence_no from usert where user_id ='${uid}'`;
       connection.query(query, async (err, result) => {
         var userdetails = await result;
         for (x of userdetails) {
@@ -321,7 +321,9 @@ router.post('/input_fine', (req, res) => {
 router.get('/licence_info', (req, res) => {
 
   var licence_no = req.query.licence_no;
+  // var query = `select c_id,c_time,fine,tp_id from complaintst where licence_no= '${licence_no}'`
   var query = `select * from complaintst where licence_no= '${licence_no}'`
+
   connection.query(query, async (err, result) => {
     console.log('query processed');
     var op = await result;
@@ -329,6 +331,30 @@ router.get('/licence_info', (req, res) => {
       res.send(op);
     else
       res.send()
+  });
+
+});
+
+
+router.post('/delete_user', (req, res) => {
+
+  var user_id = req.body.user_id;
+
+  var query1 = `delete from usert where user_id = ${user_id}`
+  var query2 = `delete from logint where user_id = ${user_id}`
+  connection.query(query1, async (err, result) => {
+    console.log(user_id)
+    if (err) res.send(result);
+    else {
+      connection.query(query2, async (err, result) => {
+        if (err) res.err(err)
+        else res.send([result, 'query processed'])
+
+      })
+
+    }
+
+
   });
 
 });
