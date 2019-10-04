@@ -29,7 +29,7 @@ connection.connect(function (err) {
 router.get("/users", (req, res) => {
 
   //  get request tolists all entries in logint table of database
-  connection.query("select * from usert;", function (err, rows, fields) {
+  connection.query("select usert.user_id ,user_name,user_address,licence_no,user_permission,user_mobile from usert join usermobilet on usert.user_id=usermobilet.user_id;", function (err, rows, fields) {
     if (err) throw err;
     res.send(JSON.stringify(rows));
 
@@ -252,18 +252,20 @@ router.get("/vehicle_info", (req, res) => {
   var plate_no = req.query.plate_no;
   var query = `select * from vehiclet where plate_no = '${plate_no}'`;
   console.log(plate_no, query);
-  connection.query(query, (err, result) => {
+  connection.query(query, async (err, result) => {
     console.log("query processed ");
-    var op = result;
+    var op = await result;
     if (result.length != 0) {
       var uid = op[0].user_id;
       var query = `select user_name,user_address,licence_no from usert where user_id ='${uid}'`;
       connection.query(query, async (err, result) => {
         var userdetails = await result;
+        console.log(userdetails)
         for (x of userdetails) {
           console.log(x);
           op.push(x);
         }
+        console.log(op)
         res.send(op);
       });
 
@@ -322,13 +324,29 @@ router.get('/licence_info', (req, res) => {
 
   var licence_no = req.query.licence_no;
   // var query = `select c_id,c_time,fine,tp_id from complaintst where licence_no= '${licence_no}'`
-  var query = `select * from complaintst where licence_no= '${licence_no}'`
+  var query = `select c_id,c_time,fine,tp_id from complaintst where licence_no= '${licence_no}'`
 
   connection.query(query, async (err, result) => {
+    var array = [];
     console.log('query processed');
     var op = await result;
-    if (op.length != 0)
-      res.send(op);
+    if (op.length != 0) {
+      console.log(op[0].tp_id)
+      for (var x of op) {
+        array.push(x);
+      }
+      connection.query(`select tp_name,tp_station from trafficpolicet where tp_id =${op[0].tp_id}`, async (err, results) => {
+        console.log(await results)
+        for (var x of results) {
+          array.push(x);
+        }
+
+        console.log('<=====', array)
+        res.send(array);
+
+      })
+
+    }
     else
       res.send()
   });
@@ -342,6 +360,11 @@ router.post('/delete_user', (req, res) => {
 
   var query1 = `delete from usert where user_id = ${user_id}`
   var query2 = `delete from logint where user_id = ${user_id}`
+  var query3 = `delete from usermobilet where user_id = ${user_id}`
+  var query4 = `delete from vehiclet where user_id = ${user_id}`
+  connection.query(query3);
+  connection.query(query4);
+
   connection.query(query1, async (err, result) => {
     console.log(user_id)
     if (err) res.send(result);
@@ -360,6 +383,31 @@ router.post('/delete_user', (req, res) => {
 });
 
 
+
+router.get('/get_routes', (req, res) => {
+
+  var query = `select route_id ,route_name,start_point,end_point   from routest  `
+
+  connection.query(query, async (err, result) => {
+    console.log(result);
+    res.send(result)
+
+  });
+
+});
+
+router.post('/get_alteroute', (req, res) => {
+  var source = req.body.source
+  var destination = req.body.destination
+
+  var query = `select alternate_route from (select routest.route_id,routest.route_name,start_point,end_point,alternateroutest.route_name as alternate_route from routest,alternateroutest where routest.route_id = alternateroutest.route_id) as derivedtable where start_point='${source}' and end_point='${destination}' `
+  console.log(query)
+  connection.query(query, async (err, result) => {
+    console.log(err);
+    console.log(await result)
+    res.send(result);
+  })
+})
 
 
 module.exports = router;

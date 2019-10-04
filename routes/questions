@@ -1,1 +1,33 @@
 how to modify global vaiables from call back functions???
+
+.login-Base {
+padding: 5%;
+ border-radius: 5%;
+ box-shadow: 0px 0px 10px #3498db;
+}
+
+.login-Base {
+   
+    padding: 5%;
+    border-radius: 5%;
+    
+   
+    box-shadow: 0px 0px 10px #3498db;
+    background-color: #CFD8DC;
+}
+
+
+.btn-outline-success {
+- color: #28a745;
+- border-color: #28a745;
++ color: #FF8F00;
+}
+
+
+
+
+(select routest.route_id,routest.route_name,start_point,end_point,alternateroutest.route_name as alternate_route from routest,alternateroutest where routest.route_id = alternateroutest.route_id;
+
+
+
+select alternate_route from (select routest.route_id,routest.route_name,start_point,end_point,alternateroutest.route_name as alternate_route from routest,alternateroutest where routest.route_id = alternateroutest.route_id) as `derived table` where start_point='Chennai' and end_point='Ennore';
